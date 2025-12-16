@@ -1989,10 +1989,10 @@ def eliminar_promocion(promo_id):
 
     flash("Promoción eliminada", "success")
     return redirect(url_for('listar_promociones'))
-
 # -------------------------------------------------------------------
 # EJECUCIÓN DEL SERVIDOR
 # -------------------------------------------------------------------
-if __name__ == '__main__':
-    # El host='0.0.0.0' permite acceder desde otras máquinas en la red local
-    app.run(debug=True)
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
