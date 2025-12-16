@@ -3,7 +3,6 @@ from flask_mail import Mail, Message
 from flask_bcrypt import Bcrypt 
 from functools import wraps 
 from datetime import datetime, date, timedelta # <-- Añadido timedelta
-import mysql.connector 
 import csv 
 from io import StringIO, BytesIO 
 import xlsxwriter 
@@ -14,9 +13,10 @@ import secrets # <-- ¡NECESARIO para generar códigos de recuperación!
 import io 
 import datetime as dt # Importamos el módulo completo con alias 'dt'
 from datetime import date, timedelta # Mantenemos date y timedelta
-# -------------------------------------------------------------
-# CREAR Y CONFIGURAR LA APLICACIÓN FLASK
-# -------------------------------------------------------------
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
 app = Flask(__name__)
 
 # Configuración de Clave Secreta para Sesiones y Mensajes Flash
@@ -69,20 +69,21 @@ def date_format(value):
 
 def db_connector():
     """
-    Establece y devuelve una conexión a la base de datos MySQL.
+    Establece y devuelve una conexión a la base de datos PostgreSQL.
     """
     try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="gestor_tienda"
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            dbname=os.getenv("DB_NAME"),
+            port=os.getenv("DB_PORT"),
+            cursor_factory=RealDictCursor
         )
         return conn
-    except mysql.connector.Error as err:
+    except psycopg2.Error as err:
         print("Error al conectar a la base de datos:", err)
         return None
-
 
 def verificar_si_es_primera_compra(cliente_id):
     """
