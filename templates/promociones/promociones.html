@@ -1,0 +1,148 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Promociones{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">Gestión de Promociones 🎁</h1>
+    
+    {# 🔑 CORRECCIÓN B5: Usamos data-bs-dismiss para los mensajes flash #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <i class="fas fa-tag mr-1"></i>
+            Lista de Promociones
+            <div class="btn-group">
+                {# 🔑 CORRECCIÓN B5: Usamos data-bs-toggle y data-bs-target para abrir el modal #}
+                <button type="button" class="btn btn-primary btn-sm ml-2" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#registrarPromocionModal">
+                    <i class="fas fa-plus-circle"></i> Nueva Promoción
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="promocionesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Estado</th>
+                            <th>Registro</th>
+                            <th data-export-exclude="true">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for promo in promociones %}
+                        <tr>
+                            <td>{{ promo.id }}</td>
+                            <td>{{ promo.nombre }}</td>
+                            <td>{{ promo.tipo }}</td>
+                            <td>
+                                {% if promo.tipo == 'porcentaje' %}
+                                    {{ promo.valor }}%
+                                {% else %}
+                                    ${{ promo.valor }}
+                                {% endif %}
+                            </td>
+                            <td>{{ promo.fecha_inicio | date_format }}</td>
+                            <td>{{ promo.fecha_fin | date_format }}</td>
+                            <td>
+                                {% if promo.activo == 1 %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ promo.registro | date_format }}</td>
+                            <td class="text-center" data-export-exclude="true" style="white-space: nowrap;">
+                                <a href="{{ url_for('ver_promocion', promo_id=promo.id) }}"
+                                   class="btn btn-primary btn-sm me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <form action="{{ url_for('eliminar_promocion', promo_id=promo.id) }}"
+                                      method="POST"
+                                      style="display:inline;"
+                                      onsubmit="return confirm('¿Eliminar esta promoción?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# 🔑 CORRECCIÓN B5: Usamos aria-labelledby y data-bs-dismiss en el modal #}
+<div class="modal fade" id="registrarPromocionModal" tabindex="-1" role="dialog" aria-labelledby="registrarPromocionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="registrarPromocionModalLabel">Registrar Nueva Promoción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="{{ url_for('guardar_promocion') }}" method="POST">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="nombre">Nombre*</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="tipo">Tipo*</label>
+                        <select class="form-control" id="tipo" name="tipo" required>
+                            <option value="porcentaje">Porcentaje (%)</option>
+                            <option value="fijo">Monto Fijo ($)</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="valor">Valor*</label>
+                        <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="fecha_inicio">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="fecha_fin">Fecha Fin</label>
+                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="activo" name="activo" value="1" checked>
+                        <label class="form-check-label" for="activo">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Promoción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {# Puedes inicializar DataTables aquí si lo estás usando para #promocionesTable #}
+{% endblock %}

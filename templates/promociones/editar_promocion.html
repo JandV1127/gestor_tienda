@@ -16,7 +16,6 @@
                     <form method="POST"
                           action="{{ url_for('actualizar_promocion', promo_id=promo.id) }}">
 
-                        <!-- NOMBRE -->
                         <div class="mb-3">
                             <label class="form-label">Nombre</label>
                             <input type="text"
@@ -26,7 +25,6 @@
                                    required>
                         </div>
 
-                        <!-- TIPO -->
                         <div class="mb-3">
                             <label class="form-label">Tipo de promoción</label>
                             <select name="tipo" class="form-select" required>
@@ -34,14 +32,13 @@
                                     {% if promo.tipo == 'porcentaje' %}selected{% endif %}>
                                     Porcentaje
                                 </option>
-                                <option value="monto_fijo"
-                                    {% if promo.tipo == 'monto_fijo' %}selected{% endif %}>
-                                    Monto fijo
+                                <option value="fijo"
+                                    {% if promo.tipo == 'fijo' %}selected{% endif %}>
+                                    Monto Fijo
                                 </option>
                             </select>
                         </div>
-
-                        <!-- VALOR -->
+                        
                         <div class="mb-3">
                             <label class="form-label">Valor</label>
                             <input type="number"
@@ -52,9 +49,8 @@
                                    required>
                         </div>
 
-                        <!-- FECHA INICIO -->
                         <div class="mb-3">
-                            <label class="form-label">Fecha inicio</label>
+                            <label class="form-label">Fecha Inicio</label>
                             <input type="date"
                                    name="fecha_inicio"
                                    class="form-control"
@@ -62,9 +58,8 @@
                                    required>
                         </div>
 
-                        <!-- FECHA FIN -->
                         <div class="mb-3">
-                            <label class="form-label">Fecha fin</label>
+                            <label class="form-label">Fecha Fin</label>
                             <input type="date"
                                    name="fecha_fin"
                                    class="form-control"
@@ -72,7 +67,6 @@
                                    required>
                         </div>
 
-                        <!-- ACTIVO -->
                         <div class="form-check mb-3">
                             <input class="form-check-input"
                                    type="checkbox"
@@ -84,7 +78,6 @@
                             </label>
                         </div>
 
-                        <!-- BOTONES -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('listar_promociones') }}"
                                class="btn btn-secondary">
