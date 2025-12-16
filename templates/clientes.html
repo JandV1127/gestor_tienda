@@ -1,0 +1,112 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Listado de Clientes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4">Gestión de Clientes 👥</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <i class="fas fa-users mr-1"></i>
+            Lista de Clientes
+            <div class="btn-group">
+                <a href="{{ url_for('crear_cliente') }}" class="btn btn-primary btn-sm ml-2">
+                    <i class="fas fa-user-plus"></i> Nuevo Cliente
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="clientesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th data-export-exclude="true">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>{{ cliente[0] }}</td>
+                            <td>{{ cliente[1] }} {{ cliente[2] }}</td> 
+                            <td>{{ cliente[3] }}</td>
+                            <td>{{ cliente[4] }}</td>
+                            <td>{{ cliente[5] }}</td>
+                            <td data-export-exclude="true" style="white-space: nowrap;">
+                                
+                                <a href="{{ url_for('editar_cliente', cliente_id=cliente[0]) }}" 
+                                   class="btn btn-action-icon btn-outline-green" 
+                                   title="Editar Cliente">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <form action="{{ url_for('eliminar_cliente', cliente_id=cliente[0]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este cliente? Esto podría afectar registros de ventas.');">
+                                    <button type="submit" class="btn btn-action-icon btn-outline-red" title="Eliminar Cliente">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Exporta el contenido de una tabla HTML a un archivo CSV.
+     */
+    function exportTableToCSV(tableId, filename) {
+        const table = document.getElementById(tableId);
+        if (!table) {
+            alert('Tabla no encontrada.');
+            return;
+        }
+
+        const rows = table.querySelectorAll('tr');
+        let csv = [];
+
+        // Iterar sobre las filas
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const cols = row.querySelectorAll('td:not([data-export-exclude="true"]), th:not([data-export-exclude="true"])');
+            let rowData = [];
+
+            for (let j = 0; j < cols.length; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/"/g, '""');
+                rowData.push('"' + data + '"');
+            }
+            csv.push(rowData.join(','));
+        }
+        
+        const csvContent = csv.join('\n');
+        const csvFile = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(csvFile);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+{% endblock %}

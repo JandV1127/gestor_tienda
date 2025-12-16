@@ -1,0 +1,98 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="main-title text-center w-100">Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card p-3 shadow-sm border-left border-fresh-green">
+            <h6 class="text-uppercase text-muted">Usuarios Activos</h6>
+            <h2 class="fw-bold text-fresh-green">{{ metricas['Usuarios Activos'] }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card p-3 shadow-sm border-left border-fresh-blue">
+            <h6 class="text-uppercase text-muted">Ingresos (Mes)</h6>
+            <h2 class="fw-bold text-fresh-blue">{{ metricas['Ingresos (Mes)'] }}</h2>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card p-3 shadow-sm border-left border-fresh-orange">
+            <h6 class="text-uppercase text-muted">Tareas Pendientes</h6>
+            <h2 class="fw-bold text-fresh-orange">{{ metricas['Tareas Pendientes'] }}</h2>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card p-3 shadow-sm border-left border-fresh-purple"> 
+            <h6 class="text-uppercase text-muted">Nuevos Clientes</h6>
+            <h2 class="fw-bold text-fresh-purple">{{ metricas['Nuevos Clientes'] }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header border-0 pt-4">
+                <h2 class="text-fresh-blue">📈 Resumen de Actividad (Ventas)</h2>
+                <p class="text-muted">Ingresos de las últimas semanas.</p>
+            </div>
+            
+            <div class="card-body pt-0">
+                <canvas id="ventasChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    // Jinja inyecta las variables Python como listas JS
+    const dias = {{ dias | tojson }};
+    const totales = {{ totales | tojson }};
+
+    const ctx = document.getElementById('ventasChart').getContext('2d');
+    const ventasChart = new Chart(ctx, {
+        type: 'line', 
+        data: {
+            labels: dias, 
+            datasets: [{
+                label: 'Ingresos Diarios ($)',
+                data: totales, 
+                // Colores del gráfico ajustados al verde fresco
+                backgroundColor: 'rgba(46, 204, 113, 0.15)', /* Color de relleno verde suave */
+                borderColor: '#2ecc71', /* Color de la línea verde */
+                borderWidth: 3,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Ingresos ($)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Día'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

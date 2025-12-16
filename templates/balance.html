@@ -1,0 +1,114 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Balance y Reportes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mt-4 main-title text-center">Balance General y Reportes 📊</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-left border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-3">
+                            <div class="text-uppercase text-muted small">INGRESOS TOTALES</div>
+                            <div class="h3 fw-bold text-fresh-green">{{ metricas.ingresos | currency_format }}</div>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-2x text-fresh-green"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-left border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-3">
+                            <div class="text-uppercase text-muted small">COSTO DE PRODUCTOS VENDIDOS (CPV)</div>
+                            <div class="h3 fw-bold text-fresh-red">{{ metricas.cpv | currency_format }}</div>
+                        </div>
+                        <i class="fas fa-box-open fa-2x text-fresh-red"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-12 mb-4">
+            <div class="card h-100 border-left border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-3">
+                            <div class="text-uppercase text-muted small">GANANCIA BRUTA</div>
+                            <div class="h3 fw-bold text-fresh-green">{{ metricas.ganancia | currency_format }}</div>
+                        </div>
+                        <i class="fas fa-hand-holding-usd fa-2x text-fresh-green"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center border-0 pt-4">
+            <h4 class="text-fresh-red m-0">
+                <i class="fas fa-chart-line mr-1"></i>
+                Ventas Recientes (Últimas 5)
+            </h4>
+            <div class="btn-group">
+                <a href="{{ url_for('exportar_reporte_consolidado') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-excel"></i> Exportar Reporte Consolidado (XLSX)
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body p-0"> 
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="ventasRecientesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th data-export-exclude="true">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas_recientes %}
+                        <tr>
+                            <td>{{ venta[0] }}</td>
+                            <td>{{ venta[1] | date_format }}</td>
+                            <td>{{ venta[3] }} {{ venta[4] }}</td>
+                            <td class="fw-bold text-fresh-green">{{ venta[2] | currency_format }}</td> 
+                            <td data-export-exclude="true" style="white-space: nowrap;">
+                                <a href="{{ url_for('detalle_venta', venta_id=venta[0]) }}" 
+                                   class="btn btn-action-icon btn-outline-green" 
+                                   title="Ver Detalle">
+                                    <i class="fas fa-search"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

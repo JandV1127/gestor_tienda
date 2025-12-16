@@ -1,0 +1,126 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Registrar Promoción{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-md-10">
+            <div class="card shadow-lg border-0 rounded-3">
+
+                <div class="card-header bg-primary text-white p-4">
+                    <h3 class="mb-0 fw-bold">
+                        <i class="fas fa-tags me-2"></i> Crear Nueva Promoción
+                    </h3>
+                </div>
+
+                <div class="card-body p-4">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('crear_promocion') }}" method="POST" id="form-promocion" novalidate>
+
+                        <!-- NOMBRE -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Nombre *</label>
+                            <input type="text" class="form-control form-control-lg"
+                                   name="nombre" required maxlength="100"
+                                   value="{{ nombre or '' }}">
+                        </div>
+
+                        <!-- TIPO Y VALOR -->
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Tipo *</label>
+                                <select class="form-select form-select-lg" name="tipo" id="tipo" required>
+                                    <option value="porcentaje" {% if tipo == 'porcentaje' %}selected{% endif %}>
+                                        Porcentaje (%)
+                                    </option>
+                                    <option value="monto_fijo" {% if tipo == 'monto_fijo' %}selected{% endif %}>
+                                        Monto fijo ($)
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Valor *</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.01" min="0"
+                                           class="form-control" name="valor"
+                                           id="valor" required
+                                           value="{{ valor or 0 }}">
+                                    <span class="input-group-text" id="valor-simbolo">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DESCRIPCIÓN -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="3">{{ descripcion or '' }}</textarea>
+                        </div>
+
+                        <!-- FECHAS -->
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Fecha inicio *</label>
+                                <input type="date" class="form-control form-control-lg"
+                                       name="fecha_inicio" required
+                                       value="{{ fecha_inicio or today }}">
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-bold">Fecha fin *</label>
+                                <input type="date" class="form-control form-control-lg"
+                                       name="fecha_fin" required
+                                       value="{{ fecha_fin or '' }}">
+                            </div>
+                        </div>
+
+                        <!-- ACTIVO -->
+                        <input type="hidden" name="activo" value="1">
+
+                        <div class="text-end">
+                            <button class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i> Guardar Promoción
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tipo = document.getElementById('tipo');
+    const simbolo = document.getElementById('valor-simbolo');
+    const valor = document.getElementById('valor');
+
+    function actualizarSimbolo() {
+        if (tipo.value === 'porcentaje') {
+            simbolo.textContent = '%';
+            valor.max = 100;
+        } else {
+            simbolo.textContent = '$';
+            valor.removeAttribute('max');
+        }
+    }
+
+    tipo.addEventListener('change', actualizarSimbolo);
+    actualizarSimbolo();
+});
+</script>
+
+{% endblock %}

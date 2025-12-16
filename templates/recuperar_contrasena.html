@@ -1,0 +1,33 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Restablecer Contraseña{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">✅ Restablecer Contraseña</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Ingresa el código que recibiste por correo y tu nueva contraseña.</p>
+                <form action="{{ url_for('recuperar_contrasena_post') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="reset_code" class="form-label">Código de Recuperación:</label>
+                        <input type="text" class="form-control" id="reset_code" name="reset_code" required maxlength="6" autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nueva Contraseña:</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Restablecer Contraseña</button>
+                </form>
+                <hr>
+                <p class="text-center">
+                    <a href="{{ url_for('login') }}">Volver al inicio de sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

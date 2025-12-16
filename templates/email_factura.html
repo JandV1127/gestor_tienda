@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Factura de Venta #{{ venta.id }}</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
+        <h2 style="color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Factura de Venta</h2>
+        
+        <p><strong>Número de Venta:</strong> #{{ venta.id }}</p>
+        <p><strong>Fecha:</strong> {{ venta.fecha.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Cliente:</strong> {{ venta.cliente_nombre }} {{ venta.cliente_apellido }} ({{ venta.cliente_email }})</p>
+        <p><strong>Vendedor:</strong> {{ venta.vendedor_nombre }}</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #f8f8f8;">
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Producto</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Cant.</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Precio Unitario</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in detalles %}
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{{ item.producto_nombre }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ item.cantidad }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${{ "{:,.2f}".format(item.precio_unitario) }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${{ "{:,.2f}".format(item.subtotal) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; text-align: right;">
+            {% if venta.descuento_porc > 0 %}
+                {# Cálculo del descuento absoluto (Monto Total * % Descuento) #}
+                {% set subtotal_original = venta.total / (1 - venta.descuento_porc/100) %}
+                {% set descuento_monto = subtotal_original * (venta.descuento_porc/100) %}
+                <p><strong>Descuento ({{ venta.descuento_porc }}%):</strong> - ${{ "{:,.2f}".format(descuento_monto) }}</p>
+            {% endif %}
+            <h3 style="color: #28a745;">TOTAL PAGADO: ${{ "{:,.2f}".format(venta.total) }}</h3>
+        </div>
+
+        {# BLOQUE DEL BONO DE BIENVENIDA (CORRECCIÓN IMPORTANTE) #}
+        {% if es_primera_compra %}
+        <div style="background-color: #FFF3E0; padding: 20px; border-radius: 8px; text-align: center; margin-top: 30px; border: 1px dashed #FF9800;">
+            <h3 style="color: #FF9800;">🎁 ¡BONO DE BIENVENIDA! 🎁</h3>
+            <p>Usa el código <b>NYJ10</b> para un 10% de descuento en tu próxima compra.</p>
+            <p style="font-size: 12px; color: #777;">Válido solo por 30 días.</p>
+        </div>
+        {% endif %}
+
+        <p style="margin-top: 30px; font-size: 12px; color: #777;">Gracias por tu compra en Tienda NYJ.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<tbody>
+{% for promo in promociones %}
+<tr>
+    <td>{{ promo[0] }}</td>   {# id #}
+    <td>{{ promo[1] }}</td>   {# nombre #}
+
+    <td>
+        {% if promo[3] == 'porcentaje' %}
+            {{ promo[4] }}%
+        {% else %}
+            ${{ promo[4] }}
+        {% endif %}
+    </td>
+
+    <td>{{ promo[6] | date_format }}</td>
+    <td>{{ promo[7] | date_format }}</td>
+
+    <td>
+        {% if promo[5] == 1 %}
+            <span class="badge bg-success">Activa</span>
+        {% else %}
+            <span class="badge bg-danger">Inactiva</span>
+        {% endif %}
+    </td>
+
+    <td>{{ promo[8] | date_format }}</td>
+
+    <td class="text-center" style="white-space: nowrap;">
+        <a href="{{ url_for('editar_promocion', promo_id=promo[0]) }}"
+           class="btn btn-primary btn-sm me-1">
+            <i class="fas fa-edit"></i>
+        </a>
+
+        <form action="{{ url_for('eliminar_promocion', promo_id=promo[0]) }}"
+              method="POST"
+              style="display:inline;"
+              onsubmit="return confirm('¿Eliminar esta promoción?');">
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</tbody>

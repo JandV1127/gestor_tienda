@@ -1,0 +1,227 @@
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    background-color: #f0f2f5; /* Fondo general claro */
+}
+
+/* --- NAVBAR SUPERIOR --- */
+.navbar {
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.navbar-brand {
+    /* Usamos un color para el texto del logo que se vea bien */
+    color: #495057 !important; 
+    font-weight: 700;
+}
+#sidebar {
+    position: fixed; 
+    min-width: 250px;
+    max-width: 250px;
+    height: calc(100vh - 56px); 
+    background: #ffffff; /* Fondo BLANCO */
+    color: #495057; 
+    transition: all 0.3s;
+    padding: 1.5rem 0.5rem; 
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Contenedor del contenido principal */
+#content {
+    width: 100%;
+    padding: 0;
+    margin-left: 250px; /* Desplazar el contenido */
+    transition: all 0.3s;
+}
+
+/* --- ENLACES DEL MENÚ (nav-item) --- */
+
+.nav-link {
+    color: #495057;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 8px; /* Bordes redondeados */
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link:hover {
+    background-color: #f8f9fa; 
+    color: #000;
+}
+
+/* ESTILO DEL ÍCONO */
+.nav-link i {
+    margin-right: 12px;
+    font-size: 1.1rem;
+    color: #6c757d; 
+    transition: color 0.2s;
+}
+
+
+/* ========================================================= */
+/* --- ESTADO ACTIVO (Dashboard) --- */
+/* ========================================================= */
+
+.nav-link.active {
+    /* Color de fondo del resaltado (el color turquesa/verde del ejemplo) */
+    background-color: #00a884 !important; 
+    color: #ffffff !important; 
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px rgba(0, 168, 132, 0.25); 
+}
+
+.nav-link.active i {
+    color: #ffffff !important; 
+}
+
+
+/* --- PIE DE PÁGINA DEL SIDEBAR (Cerrar Sesión) --- */
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 1rem 0.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.sidebar-footer .nav-link {
+    color: #dc3545; 
+}
+.sidebar-footer .nav-link:hover {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+/* --- ESTILO DE LAS TARJETAS (Métricas y Formularios) --- */
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    transition: transform 0.2s ease-in-out;
+}
+.card .border-left {
+    border-left-width: 5px !important;
+}
+
+h2.fw-bold {
+    font-size: 2rem;
+    margin-top: 5px;
+}
+
+/* ========================================================= */
+/* --- CORRECCIÓN DE BOTONES DE ACCIÓN (TABLAS) --- */
+/* ========================================================= */
+
+/* Estilo Base del Botón de Acción (Cuadrado, Icono Centrado) */
+.btn-action-icon {
+    width: 38px; 
+    height: 38px; 
+    padding: 0; 
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px; 
+    background-color: transparent !important;
+    border-width: 1.5px; 
+    font-size: 1rem; 
+    transition: all 0.2s;
+}
+
+/* Green outline for Edit/Activate/Search */
+.btn-action-icon.btn-outline-green {
+    color: #2ecc71 !important; /* Icon color (fresh-green) */
+    border-color: #2ecc71 !important; /* Border color */
+}
+.btn-action-icon.btn-outline-green:hover {
+    background-color: #2ecc71 !important;
+    color: #ffffff !important;
+}
+
+/* Red outline for Delete/Deactivate */
+.btn-action-icon.btn-outline-red {
+    color: #dc3545 !important; /* Icon color (danger) */
+    border-color: #dc3545 !important; /* Border color */
+}
+.btn-action-icon.btn-outline-red:hover {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+
+/* ========================================================= */
+/* --- ESTILOS DE COLORES PERSONALIZADOS (Acento: #00a884) --- */
+/* ========================================================= */
+
+.btn {
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    font-weight: 500;
+}
+
+/* 1. Botones Principales (Fresh Blue/Acento) */
+.btn-fresh-blue {
+    background-color: #00a884; /* Color de acento: Turquesa/Verde */
+    border-color: #00a884;
+    color: #ffffff;
+}
+.btn-fresh-blue:hover {
+    background-color: #008f72;
+    border-color: #008f72;
+    color: #ffffff;
+}
+
+/* 2. Fondos de Encabezado de Formulario (Fresh Blue/Acento) */
+.bg-fresh-blue {
+    /* Color de acento para fondos de tarjeta */
+    background-color: #00a884 !important;
+}
+
+/* 3. Texto y Títulos de Formulario (Fresh Blue/Acento) */
+.text-fresh-blue {
+    /* Color de acento para iconos o texto resaltado */
+    color: #00a884 !important; 
+}
+
+
+/* ========================================================= */
+/* --- ESTILOS DE COLORES PARA MÉTRICAS (Mantenidos) --- */
+/* ========================================================= */
+
+/* Verde para USUARIOS ACTIVOS */
+.border-fresh-green {
+    border-color: #2ecc71 !important; /* Verde esmeralda */
+    border-left-width: 5px !important; 
+}
+.text-fresh-green {
+    color: #2ecc71 !important;
+}
+
+/* Azul para INGRESOS (Mes) */
+.border-fresh-blue { /* Nota: Si deseas que las métricas sean de otro color, renombra esta clase */
+    border-color: #3498db !important; /* Azul cielo */
+    border-left-width: 5px !important;
+}
+.text-fresh-blue { /* Nota: Si deseas que las métricas sean de otro color, renombra esta clase */
+    color: #3498db !important;
+}
+
+/* Naranja para TAREAS PENDIENTES */
+.border-fresh-orange {
+    border-color: #e67e22 !important; /* Naranja zanahoria */
+    border-left-width: 5px !important;
+}
+.text-fresh-orange {
+    color: #e67e22 !important;
+}
+
+/* Morado para NUEVOS CLIENTES */
+.border-fresh-purple {
+    border-color: #9b59b6 !important; /* Morado amatista */
+    border-left-width: 5px !important;
+}
+.text-fresh-purple {
+    color: #9b59b6 !important;
+}

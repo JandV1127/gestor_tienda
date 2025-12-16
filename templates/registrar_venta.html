@@ -1,0 +1,268 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Registrar Venta{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold">🛒 Registrar Nueva Venta</h2>
+<hr>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+
+        <form id="formVenta" action="{{ url_for('registrar_venta') }}" method="POST">
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Cliente</label>
+                    <select class="form-select" name="cliente_id" required>
+                        <option value="">Seleccione un cliente...</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente[0] }}">{{ cliente[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha</label>
+                    <input type="date" class="form-control" name="fecha" value="{{ today }}" required>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Método de Pago</label>
+                    <select class="form-select" name="metodo_pago" required>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mt-4">Detalle de Productos</h5>
+            <hr>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered" id="tablaDetalles">
+                    <thead>
+                        <tr class="table-primary">
+                            <th>Producto</th>
+                            <th>Precio Unitario</th>
+                            <th style="width: 100px;">Cantidad</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+
+                    <tfoot>
+                        <tr>
+                            <td colspan="5">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="agregarFilaProducto()">
+                                    <i class="bi bi-plus-circle"></i> Añadir Producto
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="row justify-content-end">
+                <div class="col-md-6">
+
+                    <label class="form-label fw-bold">Descuento (%)</label>
+                    <input type="number" class="form-control mb-3" step="0.01" id="descuento_porc" 
+                               name="descuento_porc" value="0" onkeyup="calcularTotales()" onchange="calcularTotales()">
+
+                    <table class="table text-end">
+                        <tr>
+                            <th>Subtotal:</th>
+                            <td id="subtotalDisplay">$0.00</td>
+                        </tr>
+                        <tr>
+                            <th>Descuento:</th>
+                            <td id="descuentoDisplay">$0.00</td>
+                        </tr>
+                        <tr class="table-success">
+                            <th class="fs-5">TOTAL:</th>
+                            <td class="fs-5 fw-bold" id="totalDisplay">$0.00</td>
+                            
+                            <input type="hidden" name="total_final" id="total_final" value="0">
+                        </tr>
+                    </table>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="btnGuardarVenta" disabled>
+                        <i class="bi bi-check-circle-fill me-2"></i> Guardar Venta
+                    </button>
+
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    /* ----------------------------------------------
+        CARGA DE PRODUCTOS (INYECTADO DESDE FLASK)
+        ---------------------------------------------- */
+
+    const productosDisponibles = [
+        {% for p in productos %}
+        {
+            id: {{ p[0] }},
+            nombre: "{{ p[1] }}",
+            precio: {{ p[2] }},
+            // 🚨 CORRECCIÓN STOCK: Usa p[3] que viene de la consulta Python
+            stock: {{ p[3] }} 
+        },
+        {% endfor %}
+    ];
+
+    let filaContador = 0;
+
+    /* ----------------------------------------------
+        1. AGREGAR UNA FILA DE PRODUCTOS
+        ---------------------------------------------- */
+    function agregarFilaProducto() {
+
+        filaContador++;
+
+        const tbody = document.querySelector("#tablaDetalles tbody");
+
+        let opciones = "<option value=''>Seleccione...</option>";
+
+        // Solo muestra productos con stock > 0
+        productosDisponibles.filter(p => p.stock > 0).forEach(p => { 
+            opciones += `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">
+                                 ${p.nombre} (Stock: ${p.stock})
+                             </option>`;
+        });
+
+        const fila = document.createElement("tr");
+        fila.id = "fila-" + filaContador;
+        
+        fila.innerHTML = `
+            <td>
+                <select class="form-select" name="producto_id[]" onchange="actualizarFila(${filaContador})" required>
+                    ${opciones}
+                </select>
+                <input type="hidden" name="producto_precio_unitario[]" id="precio_base_${filaContador}">
+            </td>
+
+            <td class="text-end">
+                <input type="text" id="precio_unitario_${filaContador}" class="form-control-plaintext text-end" value="$0.00" readonly>
+            </td>
+
+            <td>
+                <input type="number" name="cantidad[]" id="cantidad_${filaContador}" 
+                        class="form-control" value="1" min="1" 
+                        onkeyup="actualizarFila(${filaContador})" 
+                        onchange="actualizarFila(${filaContador})" required>
+            </td>
+
+            <td class="text-end">
+                <input type="text" id="subtotal_${filaContador}" class="form-control-plaintext text-end" value="$0.00" readonly>
+                <input type="hidden" name="subtotal_item[]" id="subtotal_hidden_${filaContador}" value="0">
+            </td>
+
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(${filaContador})">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(fila);
+        calcularTotales();
+    }
+
+    /* ----------------------------------------------
+        2. ACTUALIZAR SUBTOTAL DE UNA FILA
+        ---------------------------------------------- */
+    function actualizarFila(i) {
+
+        const select = document.querySelector(`#fila-${i} select`);
+        const precioBase = parseFloat(select.options[select.selectedIndex].dataset.precio || 0);
+        const stock = parseInt(select.options[select.selectedIndex].dataset.stock || 0);
+        let cantidad = parseInt(document.getElementById(`cantidad_${i}`).value) || 0;
+
+        // Validación de Stock
+        if (cantidad > stock) {
+            alert("❗ STOCK INSUFICIENTE. Cantidad limitada a stock disponible.");
+            cantidad = stock;
+            document.getElementById(`cantidad_${i}`).value = stock;
+        }
+
+        // Si la cantidad es menor a 1 (por entrada manual), forzar a 1
+        if (cantidad < 1 && select.value !== "") {
+            cantidad = 1;
+            document.getElementById(`cantidad_${i}`).value = 1;
+        }
+
+        // Si no se selecciona producto, precio y subtotal son 0
+        if (select.value === "") {
+            cantidad = 0;
+            document.getElementById(`cantidad_${i}`).value = 0;
+        }
+
+
+        const subtotal = precioBase * cantidad;
+
+        // Actualiza el input oculto de precio base (que se envía al servidor)
+        document.getElementById(`precio_base_${i}`).value = precioBase.toFixed(2);
+        
+        // Actualiza las visualizaciones
+        document.getElementById(`precio_unitario_${i}`).value = "$" + precioBase.toLocaleString("es-CO", { minimumFractionDigits: 2 });
+        document.getElementById(`subtotal_hidden_${i}`).value = subtotal.toFixed(2);
+        document.getElementById(`subtotal_${i}`).value = "$" + subtotal.toLocaleString("es-CO", { minimumFractionDigits: 2 });
+
+        calcularTotales();
+    }
+
+    /* ----------------------------------------------
+        3. CALCULAR TOTALES GENERALES
+        ---------------------------------------------- */
+    function calcularTotales() {
+
+        let subtotal = 0;
+
+        // Itera sobre todos los inputs con name="subtotal_item[]" (los ocultos)
+        document.querySelectorAll('input[name="subtotal_item[]"]').forEach(x => {
+            subtotal += parseFloat(x.value) || 0;
+        });
+
+        const descuento = parseFloat(document.getElementById('descuento_porc').value) || 0;
+        const montoDescuento = subtotal * (descuento / 100);
+        const total = subtotal - montoDescuento;
+
+        document.getElementById('subtotalDisplay').innerHTML = "$" + subtotal.toLocaleString("es-CO", { minimumFractionDigits: 2 });
+        document.getElementById('descuentoDisplay').innerHTML = "$" + montoDescuento.toLocaleString("es-CO", { minimumFractionDigits: 2 });
+        document.getElementById('totalDisplay').innerHTML = "$" + total.toLocaleString("es-CO", { minimumFractionDigits: 2 });
+
+        // 🚨 CORRECCIÓN JS: Apunta al nuevo ID 'total_final' para enviar el dato
+        document.getElementById('total_final').value = total.toFixed(2);
+
+        // Habilita el botón si hay productos y el total es > 0
+        document.getElementById('btnGuardarVenta').disabled = subtotal <= 0;
+    }
+
+    /* ----------------------------------------------
+        4. ELIMINAR FILA
+        ---------------------------------------------- */
+    function eliminarFila(i) {
+        document.getElementById("fila-" + i).remove();
+        calcularTotales();
+    }
+
+    /* ----------------------------------------------
+        Agregar 1 fila inicial al cargar
+        ---------------------------------------------- */
+    document.addEventListener("DOMContentLoaded", () => {
+        agregarFilaProducto();
+    });
+
+</script>
+{% endblock %}

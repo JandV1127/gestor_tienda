@@ -1,0 +1,64 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Registrar Devolución{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold">↩️ Devolución de Venta #{{ venta[0] }}</h2>
+<hr>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        
+        <p><strong>Cliente:</strong> {{ venta[3] }}</p>
+        <p><strong>Fecha de Venta:</strong> {{ venta[1] }}</p>
+        <p><strong>Total Original:</strong> ${{ venta[2] | round(2) }}</p>
+
+        <h5 class="mt-4">Productos Vendidos</h5>
+        
+        <form action="{{ url_for('nueva_devolucion', venta_id=venta[0]) }}" method="POST">
+
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr class="table-info">
+                            <th>Producto</th>
+                            <th style="width: 120px;">Cantidad Vendida</th>
+                            <th style="width: 120px;">Cantidad a Devolver</th>
+                            <th>Precio Unitario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in detalles %}
+                        <tr>
+                            <td>{{ detalle[1] }}</td>
+                            <td>{{ detalle[2] }}</td>
+                            <td>
+                                <input type="number" 
+                                       name="devolver_cantidad_{{ detalle[0] }}" 
+                                       class="form-control form-control-sm" 
+                                       min="0" 
+                                       max="{{ detalle[2] }}" 
+                                       value="0">
+                                <input type="hidden" name="producto_id[]" value="{{ detalle[0] }}">
+                                <input type="hidden" name="cantidad_original_{{ detalle[0] }}" value="{{ detalle[2] }}">
+                                <input type="hidden" name="precio_unitario_{{ detalle[0] }}" value="{{ detalle[3] }}">
+                            </td>
+                            <td>${{ detalle[3] | round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" class="btn btn-danger btn-lg">
+                <i class="fas fa-undo"></i> Procesar Devolución
+            </button>
+            <a href="{{ url_for('detalle_venta', venta_id=venta[0]) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Detalle de Venta
+            </a>
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}

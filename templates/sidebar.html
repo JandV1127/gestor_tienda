@@ -1,0 +1,63 @@
+<nav id="sidebar" class="bg-white">
+    <div class="sidebar-header pt-3 pb-3 px-3">
+        <h4 class="text-dark">Menú Principal</h4> 
+    </div>
+
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-house-door-fill"></i>
+                Dashboard
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'listar_clientes' %}active{% endif %}" href="{{ url_for('listar_clientes') }}">
+                <i class="bi bi-people-fill"></i>
+                Clientes
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'listar_productos' %}active{% endif %}" href="{{ url_for('listar_productos') }}">
+                <i class="bi bi-box-seam"></i>
+                Productos
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'listar_ventas' %}active{% endif %}" href="{{ url_for('listar_ventas') }}">
+                <i class="bi bi-receipt-cutoff"></i>
+                Ventas
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'registrar_venta' %}active{% endif %}" href="{{ url_for('registrar_venta') }}">
+                <i class="bi bi-cart-plus-fill"></i>
+                Registrar Venta
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'listar_promociones' %}active{% endif %}" href="{{ url_for('listar_promociones') }}">
+                <i class="bi bi-tags-fill"></i>
+                Promociones
+            </a>
+        </li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'ver_balance' %}active{% endif %}" href="{{ url_for('ver_balance') }}">
+                <i class="bi bi-bar-chart-fill"></i>
+                Balance
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <a class="nav-link" href="{{ url_for('logout') }}">
+            <i class="bi bi-box-arrow-right"></i>
+            Cerrar Sesión
+        </a>
+    </div>
+</nav>

@@ -1,0 +1,106 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Detalle de Venta #{{ venta.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Detalle de Venta #{{ venta.id }}</h2>
+        
+        <div class="d-flex">
+            
+            <form method="POST" action="{{ url_for('enviar_factura', venta_id=venta.id) }}" style="display:inline;">
+                <input type="hidden" name="cliente_email" value="{{ venta.cliente_email }}"> 
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-envelope"></i> Enviar Factura por Email
+                </button>
+            </form>
+            
+            {% if venta.estado == 1 %} 
+                <a href="{{ url_for('nueva_devolucion', venta_id=venta.id) }}" class="btn btn-danger ms-2">
+                    <i class="fas fa-undo"></i> Devolver Venta
+                </a>
+            {% else %}
+                <span class="badge bg-danger ms-2 fs-5"><i class="fas fa-times-circle"></i> DEVUELTA / CANCELADA</span>
+                {% if venta.fecha_devolucion %}
+                    <span class="text-muted ms-2 small">
+                        (Fecha: {{ venta.fecha_devolucion.strftime('%d/%m/%Y %H:%M') }})
+                    </span>
+                {% endif %}
+            {% endif %}
+
+            <a href="{{ url_for('listar_ventas') }}" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Volver a Ventas
+            </a>
+        </div>
+        </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle"></i> Información General
+                </div>
+                <div class="card-body">
+                    <p><strong>Fecha:</strong> {{ venta.fecha | date_format }}</p>
+                    <p><strong>Vendedor:</strong> {{ venta.vendedor_nombre }}</p>
+                    <p><strong>Método de Pago:</strong> {{ venta.metodo_pago }}</p>
+                    <p><strong>Descuento Aplicado:</strong> {{ venta.descuento_porc }}%</p>
+                    <h3 class="mt-3 text-success">Total Pagado: ${{ "{:,.2f}".format(venta.total) }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-user"></i> Cliente
+                </div>
+                <div class="card-body">
+                    <p><strong>Nombre:</strong> {{ venta.cliente_nombre }} {{ venta.cliente_apellido }}</p>
+                    <p><strong>Correo:</strong> {{ venta.cliente_email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-dark text-white">
+            <i class="fas fa-list-alt"></i> Productos Vendidos
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th class="text-end">Precio Unitario</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in detalles %}
+                        <tr>
+                            <td>{{ item.producto_nombre if item is mapping else item[3] }}</td> 
+                            <td>{{ item.cantidad if item is mapping else item[0] }}</td>
+                            <td class="text-end">${{ "{:,.2f}".format(item.precio_unitario if item is mapping else item[1]) }}</td>
+                            <td class="text-end">${{ "{:,.2f}".format(item.subtotal if item is mapping else item[2]) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layout_base.html" %}
+
+{% block title %}Olvidé mi Contraseña{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h3 class="mb-0">🔑 Olvidé mi Contraseña</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Introduce tu dirección de correo electrónico y te enviaremos un código de recuperación.</p>
+                <form action="{{ url_for('olvidar_contrasena') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico:</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Enviar Código de Recuperación</button>
+                </form>
+                <hr>
+                <p class="text-center">
+                    <a href="{{ url_for('login') }}">Volver al inicio de sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
