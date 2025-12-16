@@ -1805,25 +1805,43 @@ def exportar_reporte_consolidado():
 # -------------------------------------------------------------------
 # RUTAS DE PROMOCIONES
 # -------------------------------------------------------------------
-
 @app.route('/promociones')
+@login_required
 def listar_promociones():
-    conn = db_connector()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT id, nombre, tipo, valor,
-               fecha_inicio, fecha_fin, activo
-        FROM promociones
-    """)
-
-    promociones = cursor.fetchall()
-    conn.close()
-
-    return render_template("promociones.html", promociones=promociones)
-
-
-
+    conn = None # Inicializamos la conexión a None
+    promociones = []
+    
+    try:
+        conn = db_connector()
+        # Usamos dictionary=True para que el HTML acceda por nombre (promo.nombre)
+        cursor = conn.cursor(dictionary=True) 
+        
+        # Consulta SQL con ALIAS corregido 'fecha_registro AS registro'
+        sql = """
+            SELECT 
+                id, nombre, tipo, valor, fecha_inicio, 
+                fecha_fin, activo, fecha_registro AS registro 
+            FROM promociones 
+            ORDER BY id DESC
+        """
+        cursor.execute(sql)
+        promociones = cursor.fetchall()
+        
+    except Exception as e:
+        # Esto es clave para ver errores en la base de datos (como 'columna desconocida')
+        print(f"[ERROR SQL EN LISTAR] {e}") 
+        flash(f"Error al cargar las promociones. Revise su tabla y columnas: {e}", "danger")
+        # Si hay error, devuelve la plantilla con una lista vacía para evitar fallos
+        
+    finally:
+        # 🔑 CORRECCIÓN CLAVE: Aseguramos el cierre de la conexión
+        if conn and conn.is_connected():
+            conn.close()
+            
+    # La plantilla se renderiza FUERA del try/except/finally
+    # Asegúrate de usar la ruta correcta ('promociones/promociones.html')
+    return render_template('promociones/promociones.html', promociones=promociones)
+    # ... (el resto del bloque try/except)
 @app.route('/promociones/estado/<int:promo_id>', methods=['POST'])
 def alternar_estado_promocion(promo_id):
     conn = db_connector()
@@ -1845,62 +1863,51 @@ def alternar_estado_promocion(promo_id):
 
 
 
-@app.route('/promociones/crear', methods=['POST'])
-def crear_promocion():
-    nombre = request.form['nombre']
-    descripcion = request.form.get('descripcion')
-    tipo = request.form['tipo']
-    valor = request.form['valor']
-    fecha_inicio = request.form['fecha_inicio']
-    fecha_fin = request.form['fecha_fin']
-    activo = 1 if request.form.get('activo') else 0
-
-    conn = db_connector()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO promociones 
-        (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, activo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, activo))
-
-    conn.commit()
-    conn.close()
-
-    flash("Promoción creada correctamente", "success")
-    return redirect(url_for('listar_promociones'))
-
-
-
-@app.route('/promociones/editar/<int:id>')
+@app.route('/promociones/crear')
 @login_required
-def ver_promocion(id):
+def crear_promocion():
+    return render_template('promociones/crear_promocion.html')
+
+
+# app.py
+
+# RUTA 4: VER PROMOCIÓN (GET - Carga datos para editar)
+@app.route('/promociones/editar/<int:promo_id>')
+@login_required
+def ver_promocion(promo_id):
+    conn = None
     try:
         conn = db_connector()
         cursor = conn.cursor(dictionary=True)
-        # Asegúrate de seleccionar todos los campos necesarios
-        cursor.execute("SELECT id, nombre, tipo_valor, inicio, fin, estado, registro FROM promociones WHERE id = %s", (id,)) 
-        promocion = cursor.fetchone()
-        conn.close()
-
-        if promocion:
-            return render_template('promociones/editar_promocion.html', promocion=promocion)
+        
+        # 🔑 CORRECCIÓN CLAVE: Usamos 'fecha_registro' en la DB y le damos el alias 'registro'
+        sql = """
+            SELECT 
+                id, nombre, tipo, valor, fecha_inicio, 
+                fecha_fin, activo, fecha_registro AS registro 
+            FROM promociones 
+            WHERE id = %s
+        """
+        cursor.execute(sql, (promo_id,)) 
+        promo = cursor.fetchone()
+        
+        if promo:
+            # Aseguramos usar la ruta del subdirectorio si aplica
+            return render_template('promociones/editar_promocion.html', promo=promo) 
         else:
             flash("Promoción no encontrada.", "danger")
-            # ⚠️ CORRECCIÓN DE RUTA
             return redirect(url_for('listar_promociones')) 
             
     except Exception as e:
-        # Se incluye la importación aquí para mayor claridad en el código
-        from mysql.connector.errors import ProgrammingError
-        if isinstance(e, ProgrammingError):
-             # Este error ocurre si la tabla 'promociones' no tiene la columna 'registro'
-             flash("Error en la estructura de la base de datos (columna 'registro' faltante o error en SELECT).", "danger")
-        else:
-             flash(f"Ocurrió un error inesperado: {e}", "danger")
-        
-        # ⚠️ CORRECCIÓN DE RUTA
+        flash(f"Error al cargar la promoción: {e}", "danger")
+        # Mostrar el error en la consola para depuración
+        print(f"[ERROR AL CARGAR PROMOCIÓN] {e}") 
         return redirect(url_for('listar_promociones'))
+        
+    finally:
+        # Asegurar el cierre de la conexión
+        if conn and conn.is_connected():
+            conn.close()
 
 # --- RUTAS DE EDICIÓN Y ELIMINACIÓN ---
 @app.route('/promociones/editar/<int:promo_id>', methods=['GET', 'POST'])
@@ -1934,61 +1941,149 @@ def editar_promocion(promo_id):
     return render_template("editar_promocion.html", promo=promo)
 
 
-@app.route('/actualizar_promocion/<int:id>', methods=['POST'])
-@login_required
-def actualizar_promocion(id):
+@app.route('/actualizar/promocion/<int:promo_id>', methods=['POST'])
+# Asegúrate de usar @login_required si lo requiere tu aplicación
+# @login_required 
+def actualizar_promocion(promo_id):
+    conn = None
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        tipo_valor = request.form['tipo_valor']
-        inicio = request.form['inicio']
-        fin = request.form['fin']
-        
-        # ⚠️ CORRECCIÓN ESTADO: Convierte el valor del checkbox a 1 o 0
-        # Si el checkbox está marcado, request.form.get('estado') es 'on'. Si no, es None.
-        estado = 1 if request.form.get('estado') == 'on' else 0
-        
-        # ⚠️ CORRECCIÓN REGISTRO: Genera la fecha y hora actual (Fecha de última actualización)
-        registro = datetime.now() 
-        
         try:
+            # 1. Capturar datos usando los nombres del HTML
+            nombre = request.form['nombre']
+            tipo = request.form['tipo'] # Corregido: usando 'tipo'
+            valor = float(request.form['valor']) 
+            fecha_inicio = request.form['fecha_inicio']
+            fecha_fin = request.form['fecha_fin']
+            
+            # Convierte el valor del checkbox 'activo' a 1 o 0
+            activo = 1 if request.form.get('activo') == 'on' else 0
+            
+            # Usamos el nombre de columna corregido 'fecha_registro'
+            fecha_registro = datetime.now() 
+            
             conn = db_connector()
             cursor = conn.cursor()
             
+            # 2. Consulta SQL con nombres de columna corregidos
             sql = """
                 UPDATE promociones 
-                SET nombre=%s, tipo_valor=%s, inicio=%s, fin=%s, estado=%s, registro=%s 
+                SET nombre=%s, tipo=%s, valor=%s, fecha_inicio=%s, fecha_fin=%s, activo=%s, fecha_registro=%s 
                 WHERE id=%s
             """
             
-            data = (nombre, tipo_valor, inicio, fin, estado, registro, id)
+            # Los datos deben coincidir con el orden de las columnas en el SQL
+            data = (nombre, tipo, valor, fecha_inicio, fecha_fin, activo, fecha_registro, promo_id)
             
             cursor.execute(sql, data)
             conn.commit()
-            conn.close()
             
             flash('Promoción actualizada exitosamente.', 'success')
-            # ⚠️ CORRECCIÓN DE RUTA
             return redirect(url_for('listar_promociones'))
 
         except Exception as e:
-            flash(f"Error al actualizar la promoción: {e}", "danger")
-            # ⚠️ CORRECCIÓN DE RUTA
-            return redirect(url_for('listar_promociones'))
+            if conn and conn.is_connected():
+                conn.rollback()
+            
+            print(f"[ERROR AL ACTUALIZAR PROMOCIÓN] {e}") 
+            flash(f"Error al actualizar la promoción. Detalle: {e}", "danger")
+            # En caso de error, volvemos a la vista de edición
+            return redirect(url_for('ver_promocion', promo_id=promo_id))
     
-    # ⚠️ CORRECCIÓN DE RUTA
+        finally:
+            # 3. ¡CORRECCIÓN CLAVE! Aseguramos el cierre de la conexión
+            if conn and conn.is_connected():
+                conn.close()
+            
+    # Si la petición no es POST
     return redirect(url_for('listar_promociones'))
 
-@app.route('/promociones/eliminar/<int:promo_id>', methods=['POST'])
+# RUTA 6: ELIMINAR PROMOCIÓN (POST)
+@app.route('/eliminar/promocion/<int:promo_id>', methods=['POST'])
+@login_required
 def eliminar_promocion(promo_id):
     conn = db_connector()
+    if conn is None:
+        flash("Error de conexión a la base de datos.", 'danger')
+        return redirect(url_for('listar_promociones'))
+    
     cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM promociones WHERE id=%s", (promo_id,))
-    conn.commit()
+    
+    try:
+        cursor.execute("DELETE FROM promociones WHERE id = %s", (promo_id,))
+        conn.commit()
+        flash("Promoción eliminada exitosamente.", 'success')
+        
+    except mysql.connector.errors.IntegrityError:
+        conn.rollback()
+        flash("No se puede eliminar la promoción porque está asociada a productos o ventas.", 'danger')
+    except Exception as e:
+        conn.rollback()
+        print(f"[ERROR AL ELIMINAR PROMOCIÓN] {e}") 
+        flash(f"Error al eliminar la promoción: {e}", 'danger')
+    
     conn.close()
-
-    flash("Promoción eliminada", "success")
     return redirect(url_for('listar_promociones'))
+
+
+@app.route('/promociones/guardar', methods=['POST'])
+@login_required
+def guardar_promocion():
+    conn = None 
+    if request.method == 'POST':
+        try:
+            # 1. Capturar datos usando los nombres del HTML (request.form['...'])
+            nombre = request.form['nombre']
+            tipo = request.form['tipo'] 
+            # Convertir valor a float para evitar problemas de formato
+            valor = float(request.form['valor']) 
+            
+            # Usamos los nombres de columna corregidos
+            fecha_inicio = request.form['fecha_inicio']
+            fecha_fin = request.form['fecha_fin']
+            
+            # Convierte el checkbox 'activo' a 1 o 0 (si está marcado, request.form.get('activo') existe)
+            activo = 1 if request.form.get('activo') else 0
+            
+            # Usamos el nombre de columna corregido 'fecha_registro' en la DB
+            fecha_registro = datetime.now() 
+
+            conn = db_connector()
+            cursor = conn.cursor()
+            
+            # 2. Consulta SQL con nombres de columna corregidos
+            sql = """
+                INSERT INTO promociones (nombre, tipo, valor, fecha_inicio, fecha_fin, activo, fecha_registro) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            # Los datos deben coincidir con el orden de las columnas en el SQL
+            data = (nombre, tipo, valor, fecha_inicio, fecha_fin, activo, fecha_registro)
+            
+            cursor.execute(sql, data)
+            conn.commit()
+            flash('Promoción creada exitosamente.', 'success')
+            return redirect(url_for('listar_promociones'))
+
+        except Exception as e:
+            # 3. Manejo de errores
+            if conn and conn.is_connected():
+                conn.rollback() # Deshace la transacción en caso de error
+            
+            print(f"[ERROR AL GUARDAR PROMOCIÓN] {e}") 
+            
+            # Mensaje genérico, el log de Python muestra el error SQL (ej: columna desconocida)
+            flash(f"Error al crear la promoción. Por favor, revise el log del servidor. Detalle: {e}", "danger")
+            
+            # Redirigir a la página de creación para que el usuario pueda reintentar
+            return redirect(url_for('crear_promocion'))
+            
+        finally:
+            # 4. Asegurar el cierre de la conexión
+            if conn and conn.is_connected():
+                conn.close()
+            
+    # Si la petición no es POST (aunque la ruta lo exige)
+    return redirect(url_for('listar_promociones'))
+
 # -------------------------------------------------------------------
 # EJECUCIÓN DEL SERVIDOR
 # -------------------------------------------------------------------
